@@ -1,0 +1,5 @@
+### Get root
+GET http://localhost:8787/
+
+### Get projects
+GET http://localhost:8787/projects
