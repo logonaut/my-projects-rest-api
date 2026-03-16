@@ -1,92 +1,55 @@
-### 1. List all projects
-GET http://localhost:8787/api/projects
+### Get all birds
+GET http://localhost:8787/api/birds
 
-###
+### Get one bird
+GET http://localhost:8787/api/birds/1
 
-### 2. Get by ID (exists)
-GET http://localhost:8787/api/projects/1
+### Get non-existent bird
+GET http://localhost:8787/api/birds/999
 
-###
-
-### 3. Get by ID (not found)
-GET http://localhost:8787/api/projects/999
-
-###
-
-### 4. Get by invalid ID (bad request)
-GET http://localhost:8787/api/projects/abc
-
-###
-
-### 5. Create valid project
-POST http://localhost:8787/api/projects
+### Create a bird (valid)
+POST http://localhost:8787/api/birds
 Content-Type: application/json
 
 {
-  "name": "Test Project",
-  "description": "Created via test"
+  "common_name": "Curve-billed Thrasher",
+  "scientific_name": "Toxostoma curvirostre",
+  "family": "Mimidae"
 }
 
-###
-
-### 6. Create — missing name (422)
-POST http://localhost:8787/api/projects
+### Create a bird (missing required field)
+POST http://localhost:8787/api/birds
 Content-Type: application/json
 
 {
-  "description": "No name"
+  "scientific_name": "Corvus brachyrhynchos"
 }
 
-###
-
-### 7. Create — unknown field (422)
-POST http://localhost:8787/api/projects
+### Create a bird (unknown field — strictObject rejects)
+POST http://localhost:8787/api/birds
 Content-Type: application/json
 
 {
-  "name": "Valid name",
-  "badField": "not allowed"
+  "common_name": "American Crow",
+  "wingspan_cm": 100
 }
 
-###
-
-### 8. Patch name only (200)
-PATCH http://localhost:8787/api/projects/1
+### Patch a bird
+PATCH http://localhost:8787/api/birds/3
 Content-Type: application/json
 
 {
-  "name": "Updated Project Name"
+  "description": "A striking whistling-duck with a bold chestnut and black body, often nesting in tree cavities."
 }
 
-###
-
-### 9. Patch description only (200)
-PATCH http://localhost:8787/api/projects/1
-Content-Type: application/json
-
-{
-  "description": "New description"
-}
-
-###
-
-### 10. Patch — empty body (422)
-PATCH http://localhost:8787/api/projects/1
+### Patch with empty body (should fail)
+PATCH http://localhost:8787/api/birds/3
 Content-Type: application/json
 
 {}
 
-###
+### Delete a bird
+DELETE http://localhost:8787/api/birds/5
 
-### 11. Delete project (204)
-DELETE http://localhost:8787/api/projects/2
-
-###
-
-### 12. Delete again — not found (404)
-DELETE http://localhost:8787/api/projects/2
-
-###
-
-### 13. List after deletion (count = 1)
-GET http://localhost:8787/api/projects
+### Delete non-existent bird
+DELETE http://localhost:8787/api/birds/999
