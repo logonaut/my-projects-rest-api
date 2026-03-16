@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { listProjects, getProjectById } from '../data/store.js'
 import { ApiError } from '../utils/errors.js'
 import { sendCollection, sendResource } from '../utils/response.js'
+import { parseIdParam } from '../utils/validation.js'
 
 const projects = new Hono()
 
@@ -11,7 +12,7 @@ projects.get('/', (c) => {
 })
 
 projects.get('/:id', (c) => {
-  const id = +c.req.param('id')   // temporary — we'll replace with parseIdParam next
+  const id = parseIdParam(c.req.param('id'))
 
   const project = getProjectById(id)
 
