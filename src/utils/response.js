@@ -16,3 +16,11 @@ export function buildErrorPayload(c, code, message, details = []) {
 export function sendError(c, status, code, message, details = []) {
   return c.json(buildErrorPayload(c, code, message, details), status)
 }
+
+export function sendResource(c, data, status = 200) {
+  return c.json({ data }, status)
+}
+
+export function sendCollection(c, data, status = 200) {
+  return c.json({ data, meta: { count: data.length } }, status)
+}
