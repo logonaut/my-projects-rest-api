@@ -1,28 +1,35 @@
-### Get root
-GET http://localhost:8787/
-
-### Get projects
+### 1. List all projects
 GET http://localhost:8787/api/projects
 
-### Get one project
+###
+
+### 2. Get by ID (exists)
 GET http://localhost:8787/api/projects/1
 
-### Get non-existent project
+###
+
+### 3. Get by ID (not found)
 GET http://localhost:8787/api/projects/999
 
-### Get invalid ID
+###
+
+### 4. Get by invalid ID (bad request)
 GET http://localhost:8787/api/projects/abc
 
-### Valid create
+###
+
+### 5. Create valid project
 POST http://localhost:8787/api/projects
 Content-Type: application/json
 
 {
   "name": "Test Project",
-  "description": "A description"
+  "description": "Created via test"
 }
 
-### Missing name
+###
+
+### 6. Create — missing name (422)
 POST http://localhost:8787/api/projects
 Content-Type: application/json
 
@@ -30,11 +37,56 @@ Content-Type: application/json
   "description": "No name"
 }
 
-### Unknown field
+###
+
+### 7. Create — unknown field (422)
 POST http://localhost:8787/api/projects
 Content-Type: application/json
 
 {
-  "name": "Valid",
-  "unknownField": "bad"
+  "name": "Valid name",
+  "badField": "not allowed"
 }
+
+###
+
+### 8. Patch name only (200)
+PATCH http://localhost:8787/api/projects/1
+Content-Type: application/json
+
+{
+  "name": "Updated Project Name"
+}
+
+###
+
+### 9. Patch description only (200)
+PATCH http://localhost:8787/api/projects/1
+Content-Type: application/json
+
+{
+  "description": "New description"
+}
+
+###
+
+### 10. Patch — empty body (422)
+PATCH http://localhost:8787/api/projects/1
+Content-Type: application/json
+
+{}
+
+###
+
+### 11. Delete project (204)
+DELETE http://localhost:8787/api/projects/2
+
+###
+
+### 12. Delete again — not found (404)
+DELETE http://localhost:8787/api/projects/2
+
+###
+
+### 13. List after deletion (count = 1)
+GET http://localhost:8787/api/projects
