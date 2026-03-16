@@ -2,4 +2,39 @@
 GET http://localhost:8787/
 
 ### Get projects
-GET http://localhost:8787/projects
+GET http://localhost:8787/api/projects
+
+### Get one project
+GET http://localhost:8787/api/projects/1
+
+### Get non-existent project
+GET http://localhost:8787/api/projects/999
+
+### Get invalid ID
+GET http://localhost:8787/api/projects/abc
+
+### Valid create
+POST http://localhost:8787/api/projects
+Content-Type: application/json
+
+{
+  "name": "Test Project",
+  "description": "A description"
+}
+
+### Missing name
+POST http://localhost:8787/api/projects
+Content-Type: application/json
+
+{
+  "description": "No name"
+}
+
+### Unknown field
+POST http://localhost:8787/api/projects
+Content-Type: application/json
+
+{
+  "name": "Valid",
+  "unknownField": "bad"
+}
