@@ -52,6 +52,46 @@ const birds = [
   },
 ]
 
+let nextSightingId = 4
+
+let sightings = [
+  {
+    id: 1,
+    birdId: 1,
+    title: 'Morning survey - Resaca trail',
+    description: 'Pair observed foraging near water.',
+    status: 'logged',
+    created_at: seededAt,
+    updated_at: seededAt,
+  },
+  {
+    id: 2,
+    birdId: 1,
+    title: 'Follow-up count',
+    description: null,
+    status: 'planned',
+    created_at: seededAt,
+    updated_at: seededAt,
+  },
+  {
+    id: 3,
+    birdId: 3,
+    title: 'Pond visit',
+    description: 'Flock of 12 roosting in snag.',
+    status: 'in-field',
+    created_at: seededAt,
+    updated_at: seededAt,
+  },
+]
+
+function clone(item) {
+  return { ...item }
+}
+
+function nowIso() {
+  return new Date().toISOString()
+}
+
 export function getAllBirds() {
   return birds
 }
@@ -89,6 +129,60 @@ export function updateBird(id, input) {
 export function deleteBird(id) {
   const index = birds.findIndex((b) => b.id === id)
   if (index === -1) return false
+
+  // cascade: remove all sightings that belong to this bird
+  for (let i = sightings.length - 1; i >= 0; i--) {
+    if (sightings[i].birdId === id) sightings.splice(i, 1)
+  }
+
   birds.splice(index, 1)
   return true
+}
+
+export function listSightingsByBird(birdId) {
+  return sightings.filter((s) => s.birdId === birdId).map(clone)
+}
+
+export function createSighting(birdId, input) {
+  const now = nowIso()
+  const sighting = {
+    id: nextSightingId,
+    birdId,
+    title: input.title.trim(),
+    description: input.description ?? '',
+    status: input.status ?? 'planned',
+    created_at: now,
+    updated_at: now,
+  }
+  nextSightingId += 1
+  sightings.push(sighting)
+  return clone(sighting)
+}
+
+export function getSightingById(id) {
+  const sighting = sightings.find((s) => s.id === id)
+  return sighting ? clone(sighting) : null
+}
+
+export function updateSighting(id, input) {
+  const index = sightings.findIndex((s) => s.id === id)
+  if (index === -1) return null
+
+  const current = sightings[index]
+  const updated = {
+    ...current,
+    ...('title' in input ? { title: input.title.trim() } : {}),
+    ...('description' in input ? { description: input.description } : {}),
+    ...('status' in input ? { status: input.status } : {}),
+    updated_at: nowIso(),
+  }
+
+  sightings[index] = updated
+  return clone(updated)
+}
+
+export function deleteSighting(id) {
+  const startSize = sightings.length
+  sightings = sightings.filter((s) => s.id !== id)
+  return sightings.length !== startSize
 }

@@ -1,55 +1,118 @@
-### Get all birds
-GET http://localhost:8787/api/birds
+### 1. List sightings for bird 1 (Great Kiskadee)
+GET http://localhost:8787/api/birds/1/sightings
 
-### Get one bird
-GET http://localhost:8787/api/birds/1
+###
 
-### Get non-existent bird
-GET http://localhost:8787/api/birds/999
+### 2. List sightings for bird 3 (Black-bellied Whistling-Duck)
+GET http://localhost:8787/api/birds/3/sightings
 
-### Create a bird (valid)
-POST http://localhost:8787/api/birds
+###
+
+### 3. List sightings for bird 999 (not found)
+GET http://localhost:8787/api/birds/999/sightings
+
+###
+
+### 4. Get sighting by ID
+GET http://localhost:8787/api/sightings/1
+
+###
+
+### 5. Get sighting not found
+GET http://localhost:8787/api/sightings/999
+
+###
+
+### 6. Create sighting for bird 2 — valid
+POST http://localhost:8787/api/birds/2/sightings
 Content-Type: application/json
 
 {
-  "common_name": "Curve-billed Thrasher",
-  "scientific_name": "Toxostoma curvirostre",
-  "family": "Mimidae"
+  "title": "Thicket survey",
+  "description": "Heard calling from dense brush near creek.",
+  "status": "logged"
 }
 
-### Create a bird (missing required field)
-POST http://localhost:8787/api/birds
+###
+
+### 7. Create sighting — missing title (422)
+POST http://localhost:8787/api/birds/1/sightings
 Content-Type: application/json
 
 {
-  "scientific_name": "Corvus brachyrhynchos"
+  "description": "No title here"
 }
 
-### Create a bird (unknown field — strictObject rejects)
-POST http://localhost:8787/api/birds
+###
+
+### 8. Create sighting — invalid status (422)
+POST http://localhost:8787/api/birds/1/sightings
 Content-Type: application/json
 
 {
-  "common_name": "American Crow",
-  "wingspan_cm": 100
+  "title": "Bad status test",
+  "status": "in-progress"
 }
 
-### Patch a bird
-PATCH http://localhost:8787/api/birds/3
+###
+
+### 9. Create sighting — status and description omitted (defaults applied)
+POST http://localhost:8787/api/birds/2/sightings
 Content-Type: application/json
 
 {
-  "description": "A striking whistling-duck with a bold chestnut and black body, often nesting in tree cavities."
+  "title": "Quick flyover"
 }
 
-### Patch with empty body (should fail)
-PATCH http://localhost:8787/api/birds/3
+###
+
+### 10. Patch sighting 1 — update status
+PATCH http://localhost:8787/api/sightings/1
+Content-Type: application/json
+
+{
+  "status": "logged"
+}
+
+###
+
+### 11. Patch sighting — empty body (422)
+PATCH http://localhost:8787/api/sightings/1
 Content-Type: application/json
 
 {}
 
-### Delete a bird
-DELETE http://localhost:8787/api/birds/5
+###
 
-### Delete non-existent bird
-DELETE http://localhost:8787/api/birds/999
+### 12. Patch sighting — invalid status (422)
+PATCH http://localhost:8787/api/sightings/1
+Content-Type: application/json
+
+{
+  "status": "done"
+}
+
+###
+
+### 13. Delete sighting 2
+DELETE http://localhost:8787/api/sightings/2
+
+###
+
+### 14. Delete again — not found (404)
+DELETE http://localhost:8787/api/sightings/2
+
+###
+
+### 15. List bird 1 sightings after delete — count drops to 1
+GET http://localhost:8787/api/birds/1/sightings
+
+###
+
+### 16. Delete a bird — cascade should remove its sightings
+DELETE http://localhost:8787/api/birds/1
+
+###
+
+### 17. Confirm no sightings orphaned — should return empty collection
+GET http://localhost:8787/api/birds/1/sightings

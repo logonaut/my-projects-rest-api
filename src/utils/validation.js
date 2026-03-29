@@ -2,6 +2,9 @@
 
 import { z } from 'zod'
 import { ApiError } from './errors.js'
+import { SIGHTING_STATUSES } from './constants.js'
+
+const STATUS_MESSAGE = `Status must be one of: ${SIGHTING_STATUSES.join(', ')}`
 
 // ── ID param ──────────────────────────────────────────────────────────────────
 
@@ -55,6 +58,43 @@ export const birdPatchSchema = z
     }
   })
 
+// ── Sighting schemas ──────────────────────────────────────────────────────────
+
+const sightingCreateSchema = z.object({
+  title: z
+    .string({ error: 'Title is required.' })
+    .trim()
+    .min(1, { error: 'Title must be a non-empty string.' }),
+  description: z.string({ error: 'Description must be a string.' }).optional(),
+  status: z
+    .string({ error: STATUS_MESSAGE })
+    .refine((val) => SIGHTING_STATUSES.includes(val), { error: STATUS_MESSAGE })
+    .optional(),
+})
+
+const sightingPatchSchema = z
+  .object({
+    title: z
+      .string({ error: 'Title must be a non-empty string.' })
+      .trim()
+      .min(1, { error: 'Title must be a non-empty string.' })
+      .optional(),
+    description: z.string({ error: 'Description must be a string.' }).optional(),
+    status: z
+      .string({ error: STATUS_MESSAGE })
+      .refine((val) => SIGHTING_STATUSES.includes(val), { error: STATUS_MESSAGE })
+      .optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (Object.keys(value).length === 0) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['body'],
+        message: 'Provide at least one field to update.',
+      })
+    }
+  })
+
 // ── Zod issue mapper ──────────────────────────────────────────────────────────
 
 export function mapZodIssuesToDetails(issues, fallbackField = 'body') {
@@ -69,4 +109,20 @@ export function mapZodIssuesToDetails(issues, fallbackField = 'body') {
       return { field: issue.path.join('.') || fallbackField, message: issue.message }
     })
     .flat()
+}
+
+// ── Validators ────────────────────────────────────────────────────────────────
+
+function validateWithSchema(payload, schema) {
+  const result = schema.safeParse(payload)
+  if (result.success) return []
+  return mapZodIssuesToDetails(result.error.issues)
+}
+
+export function validateSightingCreate(payload) {
+  return validateWithSchema(payload, sightingCreateSchema)
+}
+
+export function validateSightingPatch(payload) {
+  return validateWithSchema(payload, sightingPatchSchema)
 }

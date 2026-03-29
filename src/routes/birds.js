@@ -1,5 +1,13 @@
 import { Hono } from 'hono'
-import { getAllBirds, getBirdById, createBird, updateBird, deleteBird } from '../data/store.js'
+import {
+  getAllBirds,
+  getBirdById,
+  createBird,
+  updateBird,
+  deleteBird,
+  listSightingsByBird,
+  createSighting,
+} from '../data/store.js'
 import { ApiError } from '../utils/errors.js'
 import { sendResource, sendCollection } from '../utils/response.js'
 import { parseJsonBody } from '../utils/body.js'
@@ -8,12 +16,35 @@ import {
   birdCreateSchema,
   birdPatchSchema,
   mapZodIssuesToDetails,
+  validateSightingCreate,
 } from '../utils/validation.js'
 
 const birds = new Hono()
 
 birds.get('/', (c) => {
   return sendCollection(c, getAllBirds())
+})
+
+birds.get('/:id/sightings', (c) => {
+  const birdId = parseIdParam(c.req.param('id'), 'birdId')
+  const bird = getBirdById(birdId)
+  if (!bird) throw new ApiError(404, 'NOT_FOUND', 'Bird not found.')
+  const data = listSightingsByBird(birdId)
+  return sendCollection(c, data)
+})
+
+birds.post('/:id/sightings', async (c) => {
+  const birdId = parseIdParam(c.req.param('id'), 'birdId')
+  const bird = getBirdById(birdId)
+  if (!bird) throw new ApiError(404, 'NOT_FOUND', 'Bird not found.')
+  const payload = await parseJsonBody(c)
+  const details = validateSightingCreate(payload)
+  if (details.length > 0) {
+    throw new ApiError(422, 'VALIDATION_ERROR', 'Some fields are invalid.', details)
+  }
+  const sighting = createSighting(birdId, payload)
+  c.header('Location', `/api/sightings/${sighting.id}`)
+  return sendResource(c, sighting, 201)
 })
 
 birds.get('/:id', (c) => {

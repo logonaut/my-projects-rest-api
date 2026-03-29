@@ -2,6 +2,7 @@
 
 import { Hono } from 'hono'
 import birds from './routes/birds.js'
+import sightings from './routes/sightings.js'
 import { isApiError } from './utils/errors.js'
 import { sendError } from './utils/response.js'
 
@@ -14,6 +15,8 @@ app.use('*', async (c, next) => {
 })
 
 api.route('/birds', birds)
+api.route('/sightings', sightings)
+
 app.route('/api', api)
 
 app.notFound((c) => sendError(c, 404, 'NOT_FOUND', 'Route not found.'))
