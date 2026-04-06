@@ -1,10 +1,10 @@
-// src/routes/sightings.js
 import { Hono } from 'hono'
+import { getDb } from '../data/db.js'
 import {
   getSightingById,
   updateSighting,
   deleteSighting,
-} from '../data/store.js'
+} from '../data/sightings.repository.js'
 import { parseJsonBody } from '../utils/body.js'
 import { ApiError } from '../utils/errors.js'
 import { sendResource } from '../utils/response.js'
@@ -13,10 +13,10 @@ import { parseIdParam, validateSightingPatch } from '../utils/validation.js'
 const sightings = new Hono()
 
 // GET /api/sightings/:id
-sightings.get('/:id', (c) => {
+sightings.get('/:id', async (c) => {
   const id = parseIdParam(c.req.param('id'))
-
-  const sighting = getSightingById(id)
+  const db = getDb(c.env.DB)
+  const sighting = await getSightingById(db, id)
 
   if (!sighting) {
     throw new ApiError(404, 'NOT_FOUND', 'Sighting not found.')
@@ -35,7 +35,8 @@ sightings.patch('/:id', async (c) => {
     throw new ApiError(422, 'VALIDATION_ERROR', 'Some fields are invalid.', details)
   }
 
-  const updated = updateSighting(id, payload)
+  const db = getDb(c.env.DB)
+  const updated = await updateSighting(db, id, payload)
 
   if (!updated) {
     throw new ApiError(404, 'NOT_FOUND', 'Sighting not found.')
@@ -45,9 +46,10 @@ sightings.patch('/:id', async (c) => {
 })
 
 // DELETE /api/sightings/:id
-sightings.delete('/:id', (c) => {
+sightings.delete('/:id', async (c) => {
   const id = parseIdParam(c.req.param('id'))
-  const deleted = deleteSighting(id)
+  const db = getDb(c.env.DB)
+  const deleted = await deleteSighting(db, id)
 
   if (!deleted) {
     throw new ApiError(404, 'NOT_FOUND', 'Sighting not found.')

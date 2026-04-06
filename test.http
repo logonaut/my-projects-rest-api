@@ -1,46 +1,64 @@
-### 1. List sightings for bird 1 (Great Kiskadee)
-GET http://localhost:8787/api/birds/1/sightings
+### 1. List all birds — empty database (200, meta.count: 0)
+GET http://localhost:8787/api/birds
 
 ###
 
-### 2. List sightings for bird 3 (Black-bellied Whistling-Duck)
-GET http://localhost:8787/api/birds/3/sightings
-
-###
-
-### 3. List sightings for bird 999 (not found)
-GET http://localhost:8787/api/birds/999/sightings
-
-###
-
-### 4. Get sighting by ID
-GET http://localhost:8787/api/sightings/1
-
-###
-
-### 5. Get sighting not found
-GET http://localhost:8787/api/sightings/999
-
-###
-
-### 6. Create sighting for bird 2 — valid
-POST http://localhost:8787/api/birds/2/sightings
+### 2. Create a bird (201)
+POST http://localhost:8787/api/birds
 Content-Type: application/json
 
 {
-  "title": "Thicket survey",
-  "description": "Heard calling from dense brush near creek.",
+  "common_name": "Great Kiskadee",
+  "scientific_name": "Pitangus sulphuratus",
+  "family": "Tyrannidae",
+  "description": "A large, boldly marked flycatcher with a booming call."
+}
+
+###
+
+### 3. Get bird by id (200) — use the id returned in #2
+GET http://localhost:8787/api/birds/1
+
+###
+
+### 4. Patch bird — update description (200)
+PATCH http://localhost:8787/api/birds/1
+Content-Type: application/json
+
+{
+  "description": "Common in South Texas and Latin America."
+}
+
+###
+
+### 5. Create a bird — missing common_name (422)
+POST http://localhost:8787/api/birds
+Content-Type: application/json
+
+{
+  "scientific_name": "Ortalis vetula"
+}
+
+###
+
+### 6. Create a sighting for bird 1 (201)
+POST http://localhost:8787/api/birds/1/sightings
+Content-Type: application/json
+
+{
+  "title": "Morning survey - Resaca trail",
+  "description": "Pair observed foraging near water.",
   "status": "logged"
 }
 
 ###
 
-### 7. Create sighting — missing title (422)
+### 7. Create a sighting with defaults only (201) — status defaults to planned, description to ""
 POST http://localhost:8787/api/birds/1/sightings
 Content-Type: application/json
 
 {
-  "description": "No title here"
+  "title": "Follow-up count"
 }
 
 ###
@@ -51,32 +69,32 @@ Content-Type: application/json
 
 {
   "title": "Bad status test",
-  "status": "in-progress"
+  "status": "done"
 }
 
 ###
 
-### 9. Create sighting — status and description omitted (defaults applied)
-POST http://localhost:8787/api/birds/2/sightings
-Content-Type: application/json
-
-{
-  "title": "Quick flyover"
-}
+### 9. List sightings for bird 1 (200, meta.count: 2)
+GET http://localhost:8787/api/birds/1/sightings
 
 ###
 
-### 10. Patch sighting 1 — update status
+### 10. Get sighting by id (200) — use the id returned in #6
+GET http://localhost:8787/api/sightings/1
+
+###
+
+### 11. Patch sighting — update status (200)
 PATCH http://localhost:8787/api/sightings/1
 Content-Type: application/json
 
 {
-  "status": "logged"
+  "status": "in-field"
 }
 
 ###
 
-### 11. Patch sighting — empty body (422)
+### 12. Patch sighting — empty body (422)
 PATCH http://localhost:8787/api/sightings/1
 Content-Type: application/json
 
@@ -84,35 +102,30 @@ Content-Type: application/json
 
 ###
 
-### 12. Patch sighting — invalid status (422)
-PATCH http://localhost:8787/api/sightings/1
-Content-Type: application/json
-
-{
-  "status": "done"
-}
-
-###
-
-### 13. Delete sighting 2
+### 13. Delete sighting 2 (204)
 DELETE http://localhost:8787/api/sightings/2
 
 ###
 
-### 14. Delete again — not found (404)
+### 14. Delete sighting 2 again — not found (404)
 DELETE http://localhost:8787/api/sightings/2
 
 ###
 
-### 15. List bird 1 sightings after delete — count drops to 1
+### 15. List bird 1 sightings — count drops to 1 (200)
 GET http://localhost:8787/api/birds/1/sightings
 
 ###
 
-### 16. Delete a bird — cascade should remove its sightings
+### 16. Delete bird 1 — D1 cascade removes its sightings (204)
 DELETE http://localhost:8787/api/birds/1
 
 ###
 
-### 17. Confirm no sightings orphaned — should return empty collection
+### 17. Confirm bird is gone (404)
+GET http://localhost:8787/api/birds/1
+
+###
+
+### 18. Confirm no orphaned sightings — bird route returns 404 (not empty list)
 GET http://localhost:8787/api/birds/1/sightings
