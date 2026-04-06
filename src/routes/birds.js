@@ -1,13 +1,13 @@
 import { Hono } from 'hono'
+import { getDb } from '../data/db.js'
 import {
-  getAllBirds,
+  listBirds,
   getBirdById,
   createBird,
   updateBird,
   deleteBird,
-  listSightingsByBird,
-  createSighting,
-} from '../data/store.js'
+} from '../data/birds.repository.js'
+import { createSighting, listSightingsByBird } from '../data/sightings.repository.js'
 import { ApiError } from '../utils/errors.js'
 import { sendResource, sendCollection } from '../utils/response.js'
 import { parseJsonBody } from '../utils/body.js'
@@ -21,35 +21,40 @@ import {
 
 const birds = new Hono()
 
-birds.get('/', (c) => {
-  return sendCollection(c, getAllBirds())
+birds.get('/', async (c) => {
+  const db = getDb(c.env.DB)
+  const data = await listBirds(db)
+  return sendCollection(c, data)
 })
 
-birds.get('/:id/sightings', (c) => {
+birds.get('/:id/sightings', async (c) => {
   const birdId = parseIdParam(c.req.param('id'), 'birdId')
-  const bird = getBirdById(birdId)
+  const db = getDb(c.env.DB)
+  const bird = await getBirdById(db, birdId)
   if (!bird) throw new ApiError(404, 'NOT_FOUND', 'Bird not found.')
-  const data = listSightingsByBird(birdId)
+  const data = await listSightingsByBird(db, birdId)
   return sendCollection(c, data)
 })
 
 birds.post('/:id/sightings', async (c) => {
   const birdId = parseIdParam(c.req.param('id'), 'birdId')
-  const bird = getBirdById(birdId)
+  const db = getDb(c.env.DB)
+  const bird = await getBirdById(db, birdId)
   if (!bird) throw new ApiError(404, 'NOT_FOUND', 'Bird not found.')
   const payload = await parseJsonBody(c)
   const details = validateSightingCreate(payload)
   if (details.length > 0) {
     throw new ApiError(422, 'VALIDATION_ERROR', 'Some fields are invalid.', details)
   }
-  const sighting = createSighting(birdId, payload)
+  const sighting = await createSighting(db, birdId, payload)
   c.header('Location', `/api/sightings/${sighting.id}`)
   return sendResource(c, sighting, 201)
 })
 
-birds.get('/:id', (c) => {
+birds.get('/:id', async (c) => {
   const id = parseIdParam(c.req.param('id'))
-  const bird = getBirdById(id)
+  const db = getDb(c.env.DB)
+  const bird = await getBirdById(db, id)
   if (!bird) throw new ApiError(404, 'NOT_FOUND', 'Bird not found.')
   return sendResource(c, bird)
 })
@@ -61,14 +66,16 @@ birds.post('/', async (c) => {
     const details = mapZodIssuesToDetails(result.error.issues)
     throw new ApiError(422, 'VALIDATION_ERROR', 'Invalid bird data.', details)
   }
-  const bird = createBird(result.data)
+  const db = getDb(c.env.DB)
+  const bird = await createBird(db, result.data)
   c.header('Location', `/api/birds/${bird.id}`)
   return sendResource(c, bird, 201)
 })
 
 birds.patch('/:id', async (c) => {
   const id = parseIdParam(c.req.param('id'))
-  const existing = getBirdById(id)
+  const db = getDb(c.env.DB)
+  const existing = await getBirdById(db, id)
   if (!existing) throw new ApiError(404, 'NOT_FOUND', 'Bird not found.')
   const body = await parseJsonBody(c)
   const result = birdPatchSchema.safeParse(body)
@@ -76,13 +83,14 @@ birds.patch('/:id', async (c) => {
     const details = mapZodIssuesToDetails(result.error.issues)
     throw new ApiError(422, 'VALIDATION_ERROR', 'Invalid bird data.', details)
   }
-  const updated = updateBird(id, result.data)
+  const updated = await updateBird(db, id, result.data)
   return sendResource(c, updated)
 })
 
-birds.delete('/:id', (c) => {
+birds.delete('/:id', async (c) => {
   const id = parseIdParam(c.req.param('id'))
-  const deleted = deleteBird(id)
+  const db = getDb(c.env.DB)
+  const deleted = await deleteBird(db, id)
   if (!deleted) throw new ApiError(404, 'NOT_FOUND', 'Bird not found.')
   return c.body(null, 204)
 })
