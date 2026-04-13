@@ -129,3 +129,110 @@ GET http://localhost:8787/api/birds/1
 
 ### 18. Confirm no orphaned sightings — bird route returns 404 (not empty list)
 GET http://localhost:8787/api/birds/1/sightings
+
+###
+
+### 19. Register — missing password (expect 422)
+POST http://localhost:8787/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com"
+}
+
+###
+
+### 20. Register — password too short (expect 422)
+POST http://localhost:8787/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "short"
+}
+
+###
+
+### 21. Register — valid (expect 201)
+POST http://localhost:8787/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "password123"
+}
+
+###
+
+### 22. Register again — duplicate email (expect 409)
+POST http://localhost:8787/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "password123"
+}
+
+###
+
+### 23. Login — wrong password (expect 401)
+POST http://localhost:8787/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "wrongpassword"
+}
+
+###
+
+### 24. Login — valid (expect 200 with accessToken and refreshToken)
+POST http://localhost:8787/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "password123"
+}
+
+###
+
+### 25. GET /api/birds — no token (expect 401)
+GET http://localhost:8787/api/birds
+
+###
+
+### 26. GET /api/birds — with token (expect 200)
+### Paste your accessToken from the login response above
+GET http://localhost:8787/api/birds
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsImlhdCI6MTc3NjA1ODE1NywiZXhwIjoxNzc2MDU5MDU3fQ.nxlGQR4TgRncZtp0vbXZ_4_bbv9TM_a1-CDGqpa_aNw
+
+###
+
+### 27. Refresh — valid (expect 200 with new access_token)
+POST http://localhost:8787/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "68c9022f-a773-4734-9eb9-9eb3aa4684df"
+}
+
+###
+
+### 28. Logout — valid (expect 204)
+POST http://localhost:8787/api/auth/logout
+Content-Type: application/json
+
+{
+  "refresh_token": "68c9022f-a773-4734-9eb9-9eb3aa4684df"
+}
+
+###
+
+### 29. Refresh after logout — expect 401
+POST http://localhost:8787/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "PASTE_REFRESH_TOKEN_HERE"
+}

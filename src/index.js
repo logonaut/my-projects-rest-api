@@ -1,8 +1,8 @@
-// src/index.js
-
 import { Hono } from 'hono'
+import auth from './routes/auth.js'
 import birds from './routes/birds.js'
 import sightings from './routes/sightings.js'
+import { authenticate } from './middleware/authenticate.js'
 import { isApiError } from './utils/errors.js'
 import { sendError } from './utils/response.js'
 
@@ -14,19 +14,30 @@ app.use('*', async (c, next) => {
   await next()
 })
 
+api.route('/auth', auth)
+
+api.use('*', authenticate)
 api.route('/birds', birds)
 api.route('/sightings', sightings)
 
 app.route('/api', api)
 
-app.notFound((c) => sendError(c, 404, 'NOT_FOUND', 'Route not found.'))
+app.notFound((c) => {
+  return sendError(c, 404, 'NOT_FOUND', 'Route not found.')
+})
 
 app.onError((error, c) => {
   if (isApiError(error)) {
     return sendError(c, error.status, error.code, error.message, error.details)
   }
+
   console.error('Unhandled error:', error)
-  return sendError(c, 500, 'INTERNAL_SERVER_ERROR', 'An unexpected server error occurred.')
+  return sendError(
+    c,
+    500,
+    'INTERNAL_SERVER_ERROR',
+    'An unexpected server error occurred.',
+  )
 })
 
 export default app
