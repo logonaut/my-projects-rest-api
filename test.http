@@ -154,7 +154,7 @@ Content-Type: application/json
 ###
 
 ### 21. Register — valid (expect 201)
-POST http://localhost:8787/api/auth/register
+POST https://my-projects-rest-api.paymate-vue.workers.dev/api/auth/register
 Content-Type: application/json
 
 {
@@ -165,7 +165,7 @@ Content-Type: application/json
 ###
 
 ### 22. Register again — duplicate email (expect 409)
-POST http://localhost:8787/api/auth/register
+POST https://my-projects-rest-api.paymate-vue.workers.dev/api/auth/register
 Content-Type: application/json
 
 {
@@ -176,7 +176,7 @@ Content-Type: application/json
 ###
 
 ### 23. Login — wrong password (expect 401)
-POST http://localhost:8787/api/auth/login
+POST https://my-projects-rest-api.paymate-vue.workers.dev/api/auth/login
 Content-Type: application/json
 
 {
@@ -187,7 +187,7 @@ Content-Type: application/json
 ###
 
 ### 24. Login — valid (expect 200 with accessToken and refreshToken)
-POST http://localhost:8787/api/auth/login
+POST https://my-projects-rest-api.paymate-vue.workers.dev/api/auth/login
 Content-Type: application/json
 
 {
