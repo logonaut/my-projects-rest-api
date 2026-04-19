@@ -15,6 +15,13 @@
       "when": 1776055119012,
       "tag": "0001_deep_miek",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1776609391453,
+      "tag": "0002_heavy_sandman",
+      "breakpoints": true
     }
   ]
 }
