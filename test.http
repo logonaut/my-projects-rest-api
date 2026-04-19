@@ -1,238 +1,102 @@
-### 1. List all birds — empty database (200, meta.count: 0)
-GET http://localhost:8787/api/birds
+@baseUrl = http://localhost:8787
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsImlhdCI6MTc3NjYxMjI0MiwiZXhwIjoxNzc2NjEzMTQyfQ.RP0R9JWqqTFy8UHtw0g_G4jtkyuqEepmF4kjmKKnGJM
+@refreshToken = 86a8899c-3b86-4b53-8e2d-7bbbbf59426b
 
-###
-
-### 2. Create a bird (201)
-POST http://localhost:8787/api/birds
+### 1. Register a new user
+POST {{baseUrl}}/api/auth/register
 Content-Type: application/json
 
 {
-  "common_name": "Great Kiskadee",
-  "scientific_name": "Pitangus sulphuratus",
-  "family": "Tyrannidae",
-  "description": "A large, boldly marked flycatcher with a booming call."
+  "email": "test@example.com",
+  "password": "password123"
 }
 
-###
-
-### 3. Get bird by id (200) — use the id returned in #2
-GET http://localhost:8787/api/birds/1
-
-###
-
-### 4. Patch bird — update description (200)
-PATCH http://localhost:8787/api/birds/1
+### 2. Login
+POST {{baseUrl}}/api/auth/login
 Content-Type: application/json
 
 {
-  "description": "Common in South Texas and Latin America."
+  "email": "test@example.com",
+  "password": "password123"
 }
 
-###
-
-### 5. Create a bird — missing common_name (422)
-POST http://localhost:8787/api/birds
+### 3. Refresh access token
+POST {{baseUrl}}/api/auth/refresh
 Content-Type: application/json
 
 {
-  "scientific_name": "Ortalis vetula"
+  "refresh_token": "{{refreshToken}}"
 }
 
-###
-
-### 6. Create a sighting for bird 1 (201)
-POST http://localhost:8787/api/birds/1/sightings
+### 4. Logout
+POST {{baseUrl}}/api/auth/logout
 Content-Type: application/json
 
 {
-  "title": "Morning survey - Resaca trail",
-  "description": "Pair observed foraging near water.",
+  "refresh_token": "{{refreshToken}}"
+}
+
+### 5. List all birds (requires auth)
+GET {{baseUrl}}/api/birds
+Authorization: Bearer {{token}}
+
+### 6. Create a bird (requires auth)
+POST {{baseUrl}}/api/birds
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "common_name": "American Robin",
+  "scientific_name": "Turdus migratorius",
+  "family": "Turdidae",
+  "description": "A common North American thrush"
+}
+
+### 7. Get bird by ID (requires auth)
+GET {{baseUrl}}/api/birds/2
+Authorization: Bearer {{token}}
+
+### 8. Update bird (requires auth)
+PATCH {{baseUrl}}/api/birds/2
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "description": "Updated description"
+}
+
+### 9. Delete bird (requires auth)
+DELETE {{baseUrl}}/api/birds/2
+Authorization: Bearer {{token}}
+
+### 10. List sightings for a bird (requires auth)
+GET {{baseUrl}}/api/birds/3/sightings
+Authorization: Bearer {{token}}
+
+### 11. Create a sighting (requires auth)
+POST {{baseUrl}}/api/birds/3/sightings
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "Morning sighting at Riverside Park",
+  "description": "Spotted near the water",
   "status": "logged"
 }
 
-###
+### 12. Get sighting by ID (requires auth)
+GET {{baseUrl}}/api/sightings/3
+Authorization: Bearer {{token}}
 
-### 7. Create a sighting with defaults only (201) — status defaults to planned, description to ""
-POST http://localhost:8787/api/birds/1/sightings
+### 13. Update sighting (requires auth)
+PATCH {{baseUrl}}/api/sightings/3
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
-  "title": "Follow-up count"
+  "status": "logged"
 }
 
-###
-
-### 8. Create sighting — invalid status (422)
-POST http://localhost:8787/api/birds/1/sightings
-Content-Type: application/json
-
-{
-  "title": "Bad status test",
-  "status": "done"
-}
-
-###
-
-### 9. List sightings for bird 1 (200, meta.count: 2)
-GET http://localhost:8787/api/birds/1/sightings
-
-###
-
-### 10. Get sighting by id (200) — use the id returned in #6
-GET http://localhost:8787/api/sightings/1
-
-###
-
-### 11. Patch sighting — update status (200)
-PATCH http://localhost:8787/api/sightings/1
-Content-Type: application/json
-
-{
-  "status": "in-field"
-}
-
-###
-
-### 12. Patch sighting — empty body (422)
-PATCH http://localhost:8787/api/sightings/1
-Content-Type: application/json
-
-{}
-
-###
-
-### 13. Delete sighting 2 (204)
-DELETE http://localhost:8787/api/sightings/2
-
-###
-
-### 14. Delete sighting 2 again — not found (404)
-DELETE http://localhost:8787/api/sightings/2
-
-###
-
-### 15. List bird 1 sightings — count drops to 1 (200)
-GET http://localhost:8787/api/birds/1/sightings
-
-###
-
-### 16. Delete bird 1 — D1 cascade removes its sightings (204)
-DELETE http://localhost:8787/api/birds/1
-
-###
-
-### 17. Confirm bird is gone (404)
-GET http://localhost:8787/api/birds/1
-
-###
-
-### 18. Confirm no orphaned sightings — bird route returns 404 (not empty list)
-GET http://localhost:8787/api/birds/1/sightings
-
-###
-
-### 19. Register — missing password (expect 422)
-POST http://localhost:8787/api/auth/register
-Content-Type: application/json
-
-{
-  "email": "test@example.com"
-}
-
-###
-
-### 20. Register — password too short (expect 422)
-POST http://localhost:8787/api/auth/register
-Content-Type: application/json
-
-{
-  "email": "test@example.com",
-  "password": "short"
-}
-
-###
-
-### 21. Register — valid (expect 201)
-POST https://my-projects-rest-api.paymate-vue.workers.dev/api/auth/register
-Content-Type: application/json
-
-{
-  "email": "test@example.com",
-  "password": "password123"
-}
-
-###
-
-### 22. Register again — duplicate email (expect 409)
-POST https://my-projects-rest-api.paymate-vue.workers.dev/api/auth/register
-Content-Type: application/json
-
-{
-  "email": "test@example.com",
-  "password": "password123"
-}
-
-###
-
-### 23. Login — wrong password (expect 401)
-POST https://my-projects-rest-api.paymate-vue.workers.dev/api/auth/login
-Content-Type: application/json
-
-{
-  "email": "test@example.com",
-  "password": "wrongpassword"
-}
-
-###
-
-### 24. Login — valid (expect 200 with accessToken and refreshToken)
-POST https://my-projects-rest-api.paymate-vue.workers.dev/api/auth/login
-Content-Type: application/json
-
-{
-  "email": "test@example.com",
-  "password": "password123"
-}
-
-###
-
-### 25. GET /api/birds — no token (expect 401)
-GET http://localhost:8787/api/birds
-
-###
-
-### 26. GET /api/birds — with token (expect 200)
-### Paste your accessToken from the login response above
-GET http://localhost:8787/api/birds
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsImlhdCI6MTc3NjA1ODE1NywiZXhwIjoxNzc2MDU5MDU3fQ.nxlGQR4TgRncZtp0vbXZ_4_bbv9TM_a1-CDGqpa_aNw
-
-###
-
-### 27. Refresh — valid (expect 200 with new access_token)
-POST http://localhost:8787/api/auth/refresh
-Content-Type: application/json
-
-{
-  "refresh_token": "68c9022f-a773-4734-9eb9-9eb3aa4684df"
-}
-
-###
-
-### 28. Logout — valid (expect 204)
-POST http://localhost:8787/api/auth/logout
-Content-Type: application/json
-
-{
-  "refresh_token": "68c9022f-a773-4734-9eb9-9eb3aa4684df"
-}
-
-###
-
-### 29. Refresh after logout — expect 401
-POST http://localhost:8787/api/auth/refresh
-Content-Type: application/json
-
-{
-  "refresh_token": "PASTE_REFRESH_TOKEN_HERE"
-}
+### 14. Delete sighting (requires auth)
+DELETE {{baseUrl}}/api/sightings/3
+Authorization: Bearer {{token}}

@@ -1,6 +1,6 @@
-import { asc, eq } from 'drizzle-orm'
+import { asc, eq, and } from 'drizzle-orm'
 import { nowIso } from './db.js'
-import { sightings } from './schema.js'
+import { sightings, birds } from './schema.js'
 
 export async function listSightingsByBird(db, birdId) {
   return db
@@ -60,4 +60,13 @@ export async function deleteSighting(db, id) {
     .returning({ id: sightings.id })
 
   return deleted.length > 0
+}
+
+export async function getSightingByIdForUser(db, id, userId) {
+  const result = await db
+    .select({ sighting: sightings })
+    .from(sightings)
+    .innerJoin(birds, eq(sightings.birdId, birds.id))
+    .where(and(eq(sightings.id, id), eq(birds.userId, userId)))
+  return result[0]?.sighting || null
 }

@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { getDb } from '../data/db.js'
 import {
-  getSightingById,
+  getSightingByIdForUser,
   updateSighting,
   deleteSighting,
 } from '../data/sightings.repository.js'
@@ -14,9 +14,10 @@ const sightings = new Hono()
 
 // GET /api/sightings/:id
 sightings.get('/:id', async (c) => {
+  const userId = c.get('user').sub
   const id = parseIdParam(c.req.param('id'))
   const db = getDb(c.env.DB)
-  const sighting = await getSightingById(db, id)
+  const sighting = await getSightingByIdForUser(db, id, userId)
 
   if (!sighting) {
     throw new ApiError(404, 'NOT_FOUND', 'Sighting not found.')
@@ -27,6 +28,7 @@ sightings.get('/:id', async (c) => {
 
 // PATCH /api/sightings/:id
 sightings.patch('/:id', async (c) => {
+  const userId = c.get('user').sub
   const id = parseIdParam(c.req.param('id'))
   const payload = await parseJsonBody(c)
   const details = validateSightingPatch(payload)
@@ -36,6 +38,11 @@ sightings.patch('/:id', async (c) => {
   }
 
   const db = getDb(c.env.DB)
+  const sighting = await getSightingByIdForUser(db, id, userId)
+  if (!sighting) {
+    throw new ApiError(404, 'NOT_FOUND', 'Sighting not found.')
+  }
+
   const updated = await updateSighting(db, id, payload)
 
   if (!updated) {
@@ -47,13 +54,14 @@ sightings.patch('/:id', async (c) => {
 
 // DELETE /api/sightings/:id
 sightings.delete('/:id', async (c) => {
+  const userId = c.get('user').sub
   const id = parseIdParam(c.req.param('id'))
   const db = getDb(c.env.DB)
-  const deleted = await deleteSighting(db, id)
-
-  if (!deleted) {
+  const sighting = await getSightingByIdForUser(db, id, userId)
+  if (!sighting) {
     throw new ApiError(404, 'NOT_FOUND', 'Sighting not found.')
   }
+  await deleteSighting(db, id)
 
   return c.body(null, 204)
 })
